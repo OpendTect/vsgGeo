@@ -1,0 +1,6 @@
+To Install vsgGeo, edit vsgGeoConfig.cmake according to your settings.
+Then, run
+
+cmake .
+make
+make install

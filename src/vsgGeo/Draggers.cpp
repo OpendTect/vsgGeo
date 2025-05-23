@@ -1,0 +1,178 @@
+/* vsgGeo - A collection of geoscientific extensions to VulkanSceneGraph.
+Copyright 2025 dGB Beheer B.V.
+
+vsgGeo is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+
+*/
+
+#include <vsgGeo/Draggers.h>
+
+
+namespace vsgGeo
+{
+
+Translate1DDragger::Translate1DDragger()
+    : osgManipulator::Translate1DDragger()
+    , _inactivationModKeyMask( 0 )
+{}
+
+
+Translate1DDragger::Translate1DDragger(const osg::Vec3d& s, const osg::Vec3d& e)
+    : osgManipulator::Translate1DDragger( s,e )
+    , _inactivationModKeyMask( 0 )
+{}
+
+
+void Translate1DDragger::traverse(osg::NodeVisitor& nv)
+{
+    if (_handleEvents && nv.getVisitorType()==osg::NodeVisitor::EVENT_VISITOR)
+    {
+	osgGA::EventVisitor* ev = dynamic_cast<osgGA::EventVisitor*>(&nv);
+	if (ev)
+	{
+	    for(osgGA::EventQueue::Events::iterator itr = ev->getEvents().begin(); itr != ev->getEvents().end(); ++itr)
+	    {
+#if OSG_MIN_VERSION_REQUIRED(3,3,1)
+		osgGA::GUIEventAdapter* ea = (*itr)->asGUIEventAdapter();
+#else
+		osgGA::GUIEventAdapter* ea = itr->get();
+#endif
+		// begin modification
+		if ( ea && ea->getEventType()==osgGA::GUIEventAdapter::PUSH )
+		{
+		    osgViewer::View* view = dynamic_cast<osgViewer::View*>(ev->getActionAdapter());
+		    if ( view )
+		    {
+			osgUtil::LineSegmentIntersector::Intersections intersections;
+			if ( !view->computeIntersections(*ea,nv.getNodePath(),intersections,_intersectionMask) ) continue;
+		    }
+		}
+		// end modification
+		if (Dragger::handle(*ea, *(ev->getActionAdapter()))) ea->setHandled(true);
+	    }
+	}
+    }
+    MatrixTransform::traverse(nv);
+}
+
+
+bool Translate1DDragger::handle(const osgManipulator::PointerInfo& pointer, const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa)
+{
+    if ( ea.getEventType()==osgGA::GUIEventAdapter::PUSH )
+    {
+	if ( ea.getModKeyMask() & _inactivationModKeyMask )
+	    return false;
+    }
+
+    return osgManipulator::Translate1DDragger::handle( pointer, ea, aa );
+}
+
+
+void Translate1DDragger::setInactivationModKeyMask(unsigned int mask)
+{
+    _inactivationModKeyMask = mask;
+}
+
+
+unsigned int Translate1DDragger::getInactivationModKeyMask() const
+{
+    return _inactivationModKeyMask;
+}
+
+
+//=============================================================================
+
+
+Translate2DDragger::Translate2DDragger()
+    : osgManipulator::Translate2DDragger()
+    , _inactivationModKeyMask( 0 )
+{}
+
+
+Translate2DDragger::Translate2DDragger(const osg::Plane& plane)
+    : osgManipulator::Translate2DDragger( plane )
+    , _inactivationModKeyMask( 0 )
+{}
+
+
+void Translate2DDragger::traverse(osg::NodeVisitor& nv)
+{
+    if (_handleEvents && nv.getVisitorType()==osg::NodeVisitor::EVENT_VISITOR)
+    {
+	osgGA::EventVisitor* ev = dynamic_cast<osgGA::EventVisitor*>(&nv);
+	if ( ev )
+	{
+	    osgGA::EventQueue::Events& events = ev->getEvents();
+	    for (osgGA::EventQueue::Events::iterator itr = events.begin();
+		 itr != events.end();
+		 ++itr)
+	    {
+#if OSG_MIN_VERSION_REQUIRED(3,3,1)
+		osgGA::GUIEventAdapter* ea = (*itr)->asGUIEventAdapter();
+#else
+		osgGA::GUIEventAdapter* ea = itr->get();
+#endif
+		if ( ea )
+		{
+		    // begin modification
+		    if ( ea->getEventType()==osgGA::GUIEventAdapter::PUSH )
+		    {
+			osgViewer::View* view = dynamic_cast<osgViewer::View*>(ev->getActionAdapter());
+			if ( view )
+			{
+			    osgUtil::LineSegmentIntersector::Intersections intersections;
+			    if ( !view->computeIntersections(*ea,nv.getNodePath(),intersections,_intersectionMask) ) continue;
+			}
+		    }
+		    // end modification
+
+		    if (Dragger::handle(*ea, *(ev->getActionAdapter())))
+			ea->setHandled(true);
+		}
+	    }
+	}
+    }
+
+    MatrixTransform::traverse(nv);
+}
+
+
+bool Translate2DDragger::handle(const osgManipulator::PointerInfo& pointer, const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa)
+{
+    if ( ea.getEventType()==osgGA::GUIEventAdapter::PUSH )
+    {
+	if ( ea.getModKeyMask() & _inactivationModKeyMask )
+	    return false;
+    }
+
+    return osgManipulator::Translate2DDragger::handle( pointer, ea, aa );
+}
+
+
+void Translate2DDragger::setInactivationModKeyMask(unsigned int mask)
+{
+    _inactivationModKeyMask = mask;
+}
+
+
+unsigned int Translate2DDragger::getInactivationModKeyMask() const
+{
+    return _inactivationModKeyMask;
+}
+
+
+
+
+} // end namespace
+
