@@ -1,4 +1,3 @@
-cmake
 *.vcx*
 *.sln
 *.tcl
